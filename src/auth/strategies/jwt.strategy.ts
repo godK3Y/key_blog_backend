@@ -13,7 +13,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request: Request) => {
+          return request?.cookies?.access_token;
+        },
+      ]),
       secretOrKey: secret, // <-- ต้องเป็น string ชัวร์
       ignoreExpiration: false, // (ตัวเลือก) ตั้งค่านี้ได้
     });

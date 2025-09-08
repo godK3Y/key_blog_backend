@@ -1,8 +1,9 @@
 // src/users/users.controller.ts
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users')
 export class UserController {
@@ -31,5 +32,13 @@ export class UserController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('profile')
+  async getProfile(@Req() req: any) {
+    // req.user ถูก inject มาจาก JwtStrategy.validate()
+    const user = await this.usersService.findByEmailWithPassword(req.user.email);
+    return user;
   }
 }

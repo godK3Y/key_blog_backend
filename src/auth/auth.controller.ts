@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -14,10 +15,10 @@ export class AuthController {
     return this.auth.register(dto.name, dto.email, dto.password);
   }
 
+  @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Body() dto: LoginDto) {
-    const user = await this.auth.validateUser(dto.email, dto.password);
-    return this.auth.login({ _id: user._id, email: user.email });
+  async login(@Request() req) {
+    return this.authService.login(req.user);
   }
 
   @UseGuards(JwtAuthGuard)
