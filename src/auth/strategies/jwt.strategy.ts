@@ -1,29 +1,45 @@
-// src/auth/strategies/jwt.strategy.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 
+interface JwtPayload {
+  sub: string;
+  email: string;
+}
+
+function cookieExtractor(req: any): string | null {
+  if (req && req.cookies && req.cookies.access_token) {
+    return req.cookies.access_token;
+  }
+  return null;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(config: ConfigService) {
-    const secret = config.get<string>('JWT_SECRET');
-    if (!secret) {
-      throw new Error('JWT_SECRET is not set');
+  constructor(private configService: ConfigService) {
+    const jwtSecret = configService.get<string>('JWT_SECRET');
+
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
     }
 
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => {
-          return request?.cookies?.access_token;
-        },
-      ]),
-      secretOrKey: secret, // <-- ต้องเป็น string ชัวร์
-      ignoreExpiration: false, // (ตัวเลือก) ตั้งค่านี้ได้
+      jwtFromRequest: (req) =>
+        cookieExtractor(req) || ExtractJwt.fromAuthHeaderAsBearerToken()(req),
+      secretOrKey: jwtSecret,
+      ignoreExpiration: false,
     });
   }
 
-  validate(payload: { sub: string; email: string }) {
-    return { userId: payload.sub, email: payload.email };
+  async validate(payload: JwtPayload) {
+    if (!payload.sub || !payload.email) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
+
+    return {
+      userId: payload.sub,
+      email: payload.email,
+    };
   }
 }

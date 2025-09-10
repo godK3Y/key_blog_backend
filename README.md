@@ -96,3 +96,42 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Auth (JWT + HttpOnly cookies)
+
+- **Register**: `POST /auth/register`
+  - Body: `{ name, email, password }`
+- **Login**: `POST /auth/login`
+  - Body: `{ email, password }`
+  - On success, sets `access_token` as an HttpOnly cookie and returns `{ success: true }`.
+- **Current user**: `GET /auth/me`
+  - Protected by JWT, reads token from `access_token` cookie (fallback: `Authorization: Bearer <token>` header).
+- **Logout**: `POST /auth/logout`
+  - Clears the `access_token` cookie and returns `{ success: true }`.
+
+### Frontend usage
+
+- Include credentials so cookies are sent:
+
+```javascript
+fetch('http://localhost:3001/auth/me', {
+  method: 'GET',
+  credentials: 'include',
+});
+```
+
+- CORS is enabled with `credentials: true` and origin `CLIENT_ORIGIN` (default `http://localhost:3000`).
+
+### Environment variables
+
+- **MONGO_URI**: MongoDB connection string (required)
+- **JWT_SECRET**: Secret used to sign JWTs (required)
+- **CLIENT_ORIGIN**: Allowed CORS origin (optional; default `http://localhost:3000`)
+- **PORT**: Server port (optional; default `3001`)
+
+### Implementation notes
+
+- Cookies are set in `src/auth/auth.controller.ts` (`/auth/login`) and cleared in `/auth/logout`.
+- JWT is extracted from cookies in `src/auth/strategies/jwt.strategy.ts` with header fallback.
+- `cookie-parser` and CORS are configured in `src/main.ts` before `listen`.
+- Passwords are hashed once via Mongoose pre-save hook; existing users created before this fix may need password reset/re-register.
