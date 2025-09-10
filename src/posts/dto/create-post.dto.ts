@@ -1,13 +1,17 @@
 // src/posts/dto/create-post.dto.ts
-import { IsArray, IsBoolean, IsMongoId, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 
 export class CreatePostDto {
   @IsString()
   @MinLength(3)
   title: string;
 
+  // Slug: lowercase letters, numbers, hyphens
   @IsString()
   @MinLength(3)
+  @Matches(/^[a-z0-9-]+$/, {
+    message: 'slug must contain only lowercase letters, numbers, and hyphens',
+  })
   slug: string;
 
   @IsString()
@@ -22,7 +26,4 @@ export class CreatePostDto {
   @IsBoolean()
   @IsOptional()
   published?: boolean;
-
-  @IsMongoId()
-  author: string; // userId
 }

@@ -23,3 +23,11 @@ export class Post extends Document {
   author: Types.ObjectId;
 }
 export const PostSchema = SchemaFactory.createForClass(Post);
+
+// Helpful indexes for query patterns
+PostSchema.index({ slug: 1 }, { unique: true });
+PostSchema.index({ published: 1, createdAt: -1 });
+PostSchema.index({ tags: 1 });
+PostSchema.index({ author: 1, createdAt: -1 });
+// Optional text search over title/content (enables $text)
+PostSchema.index({ title: 'text', content: 'text' });
