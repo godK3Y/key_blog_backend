@@ -135,3 +135,95 @@ fetch('http://localhost:3001/auth/me', {
 - JWT is extracted from cookies in `src/auth/strategies/jwt.strategy.ts` with header fallback.
 - `cookie-parser` and CORS are configured in `src/main.ts` before `listen`.
 - Passwords are hashed once via Mongoose pre-save hook; existing users created before this fix may need password reset/re-register.
+
+## Postman examples
+
+Base URL: `http://localhost:3001`
+
+- Register
+
+```http
+POST /auth/register
+Content-Type: application/json
+
+{
+  "name": "Demo User",
+  "email": "demo@example.com",
+  "password": "password123"
+}
+```
+
+- Login (sets HttpOnly cookie)
+
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "demo@example.com",
+  "password": "password123"
+}
+```
+
+- Current user (requires cookie)
+
+```http
+GET /auth/me
+```
+
+- Create post (author comes from cookie JWT)
+
+```http
+POST /posts
+Content-Type: application/json
+
+{
+  "title": "NestJS + Mongo Tips",
+  "slug": "nestjs-mongo-tips",
+  "content": "Here are some useful tips for NestJS with MongoDB...",
+  "tags": ["nestjs", "mongodb", "guide"],
+  "published": true
+}
+```
+
+- List posts
+
+```http
+GET /posts?page=1&limit=10&tag=nestjs&published=true&q=search%20terms
+```
+
+- Get by slug
+
+```http
+GET /posts/slug/nestjs-mongo-tips
+```
+
+- Get by id
+
+```http
+GET /posts/64e2f2c1a8f0b80012abcd34
+```
+
+- Update post (owner only)
+
+```http
+PUT /posts/64e2f2c1a8f0b80012abcd34
+Content-Type: application/json
+
+{
+  "title": "NestJS + Mongo Tips (Updated)",
+  "tags": ["nestjs", "mongodb", "best-practices"]
+}
+```
+
+- Delete post (owner only)
+
+```http
+DELETE /posts/64e2f2c1a8f0b80012abcd34
+```
+
+- Logout
+
+```http
+POST /auth/logout
+```
